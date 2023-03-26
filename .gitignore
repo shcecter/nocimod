@@ -2,3 +2,5 @@
 *__pycache__*
 *.pyc
 .jupyter*
+*.jupyterlab-workspace
+.DS_Store
