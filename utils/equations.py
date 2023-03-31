@@ -58,3 +58,28 @@ base_nav18 = Equations(
 )
 
 nav18_eqs = base_nav18 + dndt + dhdt + dmdt + gNa18_eq
+
+# Krylov equations
+m_s = Equations(  # (1.11)
+    """
+alpha_m = exp(0.039/mV * v - 0.56) / ms : Hz
+beta_m = exp(-0.049/mV * v - 2.53) / ms : Hz
+m_inf = alpha_m / (alpha_m + beta_m) : 1
+tau_m = 1 / (alpha_m + beta_m) : second
+dm/dt = (m_inf - m) / tau_m : 1
+"""
+)
+h_s = Equations(  # (1.12)
+    """
+alpha_h = 0.002 * exp(-v/mV / 30) / ms : Hz
+beta_h = 0.1/(1 + 0.2 * exp(-(v/mV + 10)/7)) / ms : Hz
+h_inf = alpha_h / (alpha_h + beta_h) : 1
+tau_h = 1 / (alpha_h + beta_h) : second
+dh/dt = (h_inf - h) / tau_h : 1
+"""
+)
+m_model = m_s + Equations("INa18 = gNa18 * m * (v - Ena) : ampere")  # (1.13)
+
+m3_model = m_s + Equations("INa18 = gNa18 * m**3 * (v - Ena) : ampere")  # (1.14)
+
+m3h_s_model = m_s + h_s + Equations("INa18 = gNa18 * m**3 * h * (v - Ena) : ampere")
