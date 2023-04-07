@@ -78,8 +78,19 @@ tau_h = 1 / (alpha_h + beta_h) : second
 dh/dt = (h_inf - h) / tau_h : 1
 """
 )
+h_f = Equations(  # (1.15)
+    """
+alpha_h = 0.012 * exp(-(v/mV + 43)/10) / ms : Hz
+beta_h = 1.32 / (1 + 0.2 * exp(-(v/mV + 10)/7)) / ms : Hz
+h_inf = alpha_h / (alpha_h + beta_h) : 1
+tau_h = 1 / (alpha_h + beta_h) : second
+dh/dt = (h_inf - h) / tau_h : 1
+"""
+)
 m_model = m_s + Equations("INa18 = gNa18 * m * (v - Ena) : ampere")  # (1.13)
 
 m3_model = m_s + Equations("INa18 = gNa18 * m**3 * (v - Ena) : ampere")  # (1.14)
 
 m3h_s_model = m_s + h_s + Equations("INa18 = gNa18 * m**3 * h * (v - Ena) : ampere")
+
+m3h_f_model = m_s + h_f + Equations("INa18 = gNa18 * m**3 * h * (v - Ena) : ampere")
