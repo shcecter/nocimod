@@ -99,3 +99,10 @@ def plot_ln_G_vs_voltages(max_g, voltages, g_max, xlim=(-60, 15), ylim=(-15, 5))
     br.grid(True)
     br.xlim(*xlim)
     br.ylim(*ylim)
+
+
+def comp_Zeff(max_gs, experimental_voltages, gna_max):
+    lnG = ln_G(max_gs[:2], gna_max)
+    d_lnG = lnG[1] - lnG[0]
+    d_volt = experimental_voltages[1] - experimental_voltages[0]
+    return d_lnG / d_volt * br.mV
