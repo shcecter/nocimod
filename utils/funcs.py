@@ -1,5 +1,20 @@
 import brian2 as br
 
+from .equations import threshold_str, refractory_str
+
+
+basic_namespace = {
+    "Cm": 20 * br.pF,
+    "Ena": 55 * br.mV,
+    "Ek": -85 * br.mV,
+    "El": -70 * br.mV,
+    "gK": 40 * br.nS,
+    "gL": 3 * br.nS,  # needed for IF_curve
+    "gNa": 50 * br.nS,
+    "gNa18": 100 * br.nS,
+    "VT": -63 * br.mV,
+}
+
 
 # Plot IF curve functions
 def compIFcurve(group, max_cur=240, N=100):  # arg N is redundant
@@ -10,8 +25,16 @@ def compIFcurve(group, max_cur=240, N=100):  # arg N is redundant
     return mon
 
 
-def plotIFcurve(mon, group):
-    br.plot(group.I / br.pA, mon.count / 2, "--o", lw=1, ms=4)
+def compIFcurve_by_equation(equation, name_space):
+    br.start_scope()
+    N = 100
+    neurons = br.NeuronGroup(N, equation, threshold=threshold_str, refractory=refractory_str,
+                             method="exponential_euler", namespace=name_space)
+    return compIFcurve(neurons), neurons
+
+
+def plotIFcurve(mon, group, ms=4):
+    br.plot(group.I / br.pA, mon.count / 2, "--o", lw=1, ms=ms)
     br.xlabel("Входящий ток, пА")
     br.ylabel("Частота, Гц")
     br.grid(True)
@@ -34,24 +57,6 @@ def max_currents(voltages, neuron_group, neuron_group_statemon):
         br.run(200 * br.ms)
         max_current_values.append(abs(neuron_group_statemon.INa18[0] / br.pA).max())
     return max_current_values
-
-
-def max_conductances(voltages, neuron_group, neuron_group_statemon, network, restore_name):
-    """
-    Returns a list of max conductance values for given neuron group and list of voltages
-
-    :param voltages: list of voltages to iterate over
-    :param neuron_group: NeuronGroup to set voltage for each iteration
-    :param neuron_group_statemon: StateMonitor to record current values
-    :return: list of max conductance values
-    """
-    max_g = []
-    for v in voltages:
-        network.restore(restore_name)
-        neuron_group.v = v
-        network.run(200 * br.ms)
-        max_g.append(abs(neuron_group_statemon.INa18[0]).max() / v)
-    return max_g
 
 
 def plot_max_g(voltages, neuron_group, neuron_group_statemon):
@@ -102,7 +107,11 @@ def plot_ln_G_vs_voltages(max_g, voltages, g_max, xlim=(-60, 15), ylim=(-15, 5))
 
 
 def comp_Zeff(max_gs, experimental_voltages, gna_max):
+    k_boltzmann = 1.38
+    T = 300
+    eps_0 = 8.854
+    e = 1.602
     lnG = ln_G(max_gs[:2], gna_max)
     d_lnG = lnG[1] - lnG[0]
     d_volt = experimental_voltages[1] - experimental_voltages[0]
-    return d_lnG / d_volt * br.mV
+    return (d_lnG / d_volt * br.mV) * k_boltzmann * T / eps_0 / e

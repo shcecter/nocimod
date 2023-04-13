@@ -50,12 +50,60 @@ dh/dt = (h_inf - h) / tau_h : 1
     h_inf="hNa18_inf",
 )
 
-gNa18_eq_modified = Equations(
+gNa18_eq_higherZeff = Equations(
     """
 INa18 = gNa18 * m**3 * h * (v - Ena) : ampere
 
 alpha_m = 2.85/ms - 2.84 / (1 + exp((v/mV + 5)/13.95)) / ms : Hz
-beta_m = 7.62 / (1 + exp((v/mV + 46.5)/8.83)) / ms : Hz
+beta_m = 7.62 / (1 + exp((v/mV + 60)/8.83)) / ms : Hz
+m_inf = alpha_m / (alpha_m + beta_m) : 1
+tau_m = 1 / (alpha_m + beta_m) : second
+dm/dt = (m_inf - m) / tau_m : 1
+
+tau_h = 1.218*ms + 42. * exp(-((v/mV + 38.1)**2) / (2*15.2**2))*ms : second
+h_inf = 1 / (1 + exp((v/mV + 32.2)/4)) : 1
+dh/dt = (h_inf - h) / tau_h : 1
+""",
+    m="mNa18",
+    h="hNa18",
+    alpha_m="amNa18",
+    beta_m="bmNa18",
+    tau_m="tau_mNa18",
+    m_inf="mNa18_inf",
+    tau_h="tau_hNa18",
+    h_inf="hNa18_inf",
+)
+
+gNa18_eq_lowerZeff = Equations(
+    """
+INa18 = gNa18 * m**3 * h * (v - Ena) : ampere
+
+alpha_m = 2.85/ms - 2.84 / (1 + exp((v/mV - 6)/13.95)) / ms : Hz
+beta_m = 7.62 / (1 + exp((v/mV + 30)/10)) / ms : Hz
+m_inf = alpha_m / (alpha_m + beta_m) : 1
+tau_m = 1 / (alpha_m + beta_m) : second
+dm/dt = (m_inf - m) / tau_m : 1
+
+tau_h = 1.218*ms + 42. * exp(-((v/mV + 38.1)**2) / (2*15.2**2))*ms : second
+h_inf = 1 / (1 + exp((v/mV + 32.2)/4)) : 1
+dh/dt = (h_inf - h) / tau_h : 1
+""",
+    m="mNa18",
+    h="hNa18",
+    alpha_m="amNa18",
+    beta_m="bmNa18",
+    tau_m="tau_mNa18",
+    m_inf="mNa18_inf",
+    tau_h="tau_hNa18",
+    h_inf="hNa18_inf",
+)
+
+gNa18_eq_lowerZeff2 = Equations(
+    """
+INa18 = gNa18 * m**3 * h * (v - Ena) : ampere
+
+alpha_m = 1.7/ms - 1.6 / (1 + exp((v/mV - 6)/13.95)) / ms : Hz
+beta_m = 4 / (1 + exp((v/mV + 30)/10)) / ms : Hz
 m_inf = alpha_m / (alpha_m + beta_m) : 1
 tau_m = 1 / (alpha_m + beta_m) : second
 dm/dt = (m_inf - m) / tau_m : 1
@@ -91,7 +139,9 @@ beta_m = exp(-0.049/mV * v - 2.53) / ms : Hz
 m_inf = alpha_m / (alpha_m + beta_m) : 1
 tau_m = 1 / (alpha_m + beta_m) : second
 dm/dt = (m_inf - m) / tau_m : 1
-"""
+""",
+    m="m_s", m_inf="m_s_inf", tau_m="tau_m_s",
+    alpha_m="alpha_m_s", beta_m="beta_m_s",
 )
 h_s = Equations(  # (1.12)
     """
@@ -100,7 +150,9 @@ beta_h = 0.1/(1 + 0.2 * exp(-(v/mV + 10)/7)) / ms : Hz
 h_inf = alpha_h / (alpha_h + beta_h) : 1
 tau_h = 1 / (alpha_h + beta_h) : second
 dh/dt = (h_inf - h) / tau_h : 1
-"""
+""",
+    h="h_s", h_inf="h_s_inf", tau_h="tau_h_s",
+    alpha_h="alpha_h_s", beta_h="beta_h_s",
 )
 h_f = Equations(  # (1.15)
     """
@@ -109,12 +161,14 @@ beta_h = 1.32 / (1 + 0.2 * exp(-(v/mV + 10)/7)) / ms : Hz
 h_inf = alpha_h / (alpha_h + beta_h) : 1
 tau_h = 1 / (alpha_h + beta_h) : second
 dh/dt = (h_inf - h) / tau_h : 1
-"""
+""",
+    h="h_f", h_inf="h_f_inf", tau_h="tau_h_f",
+    alpha_h="alpha_h_f", beta_h="beta_h_f",
 )
-m_model = m_s + Equations("INa18 = gNa18 * m * (v - Ena) : ampere")  # (1.13)
+m_model = m_s + Equations("INa18 = gNa18 * m_s * (v - Ena) : ampere")  # (1.13)
 
-m3_model = m_s + Equations("INa18 = gNa18 * m**3 * (v - Ena) : ampere")  # (1.14)
+m3_model = m_s + Equations("INa18 = gNa18 * m_s**3 * (v - Ena) : ampere")  # (1.14)
 
-m3h_s_model = m_s + h_s + Equations("INa18 = gNa18 * m**3 * h * (v - Ena) : ampere")
+m3h_s_model = m_s + h_s + Equations("INa18 = gNa18 * m_s**3 * h_s * (v - Ena) : ampere")
 
-m3h_f_model = m_s + h_f + Equations("INa18 = gNa18 * m**3 * h * (v - Ena) : ampere")
+m3h_f_model = m_s + h_f + Equations("INa18 = gNa18 * m_s**3 * h_f * (v - Ena) : ampere")
