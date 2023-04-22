@@ -17,7 +17,7 @@ basic_namespace = {
 
 
 # Plot IF curve functions
-def compIFcurve(group, max_cur=240, N=100):  # arg N is redundant
+def compIFcurve(group, max_cur=240, N=100):
     mon = br.SpikeMonitor(group)
     group.v = -70 * br.mV
     group.I = f"i * {max_cur}*pA / N"  # noqa E741
@@ -25,18 +25,38 @@ def compIFcurve(group, max_cur=240, N=100):  # arg N is redundant
     return mon
 
 
-def compIFcurve_by_equation(equation, name_space):
+def compIFcurve_by_equation(equation, name_space, max_cur=240, N=100):
     br.start_scope()
-    N = 100
     neurons = br.NeuronGroup(N, equation, threshold=threshold_str, refractory=refractory_str,
                              method="exponential_euler", namespace=name_space)
-    return compIFcurve(neurons), neurons
+    return compIFcurve(neurons, max_cur, N), neurons
 
 
 def plotIFcurve(mon, group, ms=4):
     br.plot(group.I / br.pA, mon.count / 2, "--o", lw=1, ms=ms)
     br.xlabel("Входящий ток, пА")
     br.ylabel("Частота, Гц")
+    br.grid(True)
+
+
+def comp_statemon_by_equation(equation, name_space, I=100 * br.pA):
+    br.start_scope()
+    neurons = br.NeuronGroup(1, equation, method="exponential_euler", namespace=name_space)
+    neurons.v = name_space["El"]
+    stmon = br.StateMonitor(neurons, "v", record=True)
+    br.run(10 * br.ms)
+    neurons.I = I
+    br.run(100 * br.ms)
+    neurons.I = 0 * br.pA
+    br.run(10 * br.ms)
+    return stmon, neurons
+
+
+def plot_v_by_equation(equation, name_space, I=100 * br.pA):
+    stmon, _ = comp_statemon_by_equation(equation, name_space, I)
+    br.plot(stmon.t / br.ms, stmon.v[0] / br.mV)
+    br.xlabel("Время, мс")
+    br.ylabel("мВ")
     br.grid(True)
 
 
